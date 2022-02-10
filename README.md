@@ -10,6 +10,10 @@
 Nextjs
 React 
 Chakra ui
+Nprogress
+Framer Motion
+Millify
+Axios
 Fetching data from APIs powered by https://rapidapi.com
 
 ```
