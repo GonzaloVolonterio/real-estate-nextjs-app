@@ -1,116 +1,71 @@
-import { useEffect, useState } from 'react';
-import { Flex, Select, Box, Text, Input, Spinner, Icon, Button } from '@chakra-ui/react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { MdCancel } from 'react-icons/md';
-import Image from 'next/image';
+import Image from 'next/image'
+import { Flex, Box, Text, Icon } from '@chakra-ui/react';
+import { BsFilter } from 'react-icons/bs';
 
-import { filterData, getFilterValues } from '../utils/filterData';
+import Property from '../components/Property';
+import SearchFilters from '../components/SearchFilters';
 import { baseUrl, fetchApi } from '../utils/fetchApi';
-import noresult from '../assets/images/noresult.svg';
+import noresult from '../assets/images/noresult.svg'
 
-export default function SearchFilters() {
-  const [filters] = useState(filterData);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [locationData, setLocationData] = useState();
-  const [showLocations, setShowLocations] = useState(false);
-  const [loading, setLoading] = useState(false);
+const Search = ({ properties }) => {
+  const [searchFilters, setSearchFilters] = useState(false);
   const router = useRouter();
 
-  const searchProperties = (filterValues) => {
-    const path = router.pathname;
-    const { query } = router;
-
-    const values = getFilterValues(filterValues)
-
-    values.forEach((item) => {
-      if(item.value && filterValues?.[item.name]) {
-        query[item.name] = item.value
-      }
-    })
-
-    router.push({ pathname: path, query: query });
-  };
-
-  useEffect(() => {
-    if (searchTerm !== '') {
-      const fetchData = async () => {
-        setLoading(true);
-        const data = await fetchApi(`${baseUrl}/auto-complete?query=${searchTerm}`);
-        setLoading(false);
-        setLocationData(data?.hits);
-      };
-
-      fetchData();
-    }
-  }, [searchTerm]);
-
   return (
-    <Flex bg='gray.100' p='4' justifyContent='center' flexWrap='wrap'>
-      {filters?.map((filter) => (
-        <Box key={filter.queryName}>
-          <Select onChange={(e) => searchProperties({ [filter.queryName]: e.target.value })} placeholder={filter.placeholder} w='fit-content' p='2' >
-            {filter?.items?.map((item) => (
-              <option value={item.value} key={item.value}>
-                {item.name}
-              </option>
-            ))}
-          </Select>
-        </Box>
-      ))}
-      <Flex flexDir='column'>
-        <Button onClick={() => setShowLocations(!showLocations)} border='1px' borderColor='gray.200' marginTop='2' >
-          Search Location
-        </Button>
-        {showLocations && (
-          <Flex flexDir='column' pos='relative' paddingTop='2'>
-            <Input
-              placeholder='Type Here'
-              value={searchTerm}
-              w='300px'
-              focusBorderColor='gray.300'
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {searchTerm !== '' && (
-              <Icon
-                as={MdCancel}
-                pos='absolute'
-                cursor='pointer'
-                right='5'
-                top='5'
-                zIndex='100'
-                onClick={() => setSearchTerm('')}
-              />
-            )}
-            {loading && <Spinner margin='auto' marginTop='3' />}
-            {showLocations && (
-              <Box height='300px' overflow='auto'>
-                {locationData?.map((location) => (
-                  <Box
-                    key={location.id}
-                    onClick={() => {
-                      searchProperties({ locationExternalIDs: location.externalID });
-                      setShowLocations(false);
-                      setSearchTerm(location.name);
-                    }}
-                  >
-                    <Text cursor='pointer' bg='gray.200' p='2' borderBottom='1px' borderColor='gray.100' >
-                      {location.name}
-                    </Text>
-                  </Box>
-                ))}
-                {!loading && !locationData?.length && (
-                  <Flex justifyContent='center' alignItems='center' flexDir='column' marginTop='5' marginBottom='5' >
-                    <Image src={noresult} />
-                    <Text fontSize='xl' marginTop='3'>
-                      Waiting to search!
-                    </Text>
-                  </Flex>
-                )}
-              </Box>
-            )}
-          </Flex>
-        )}
+    <Box>
+      <Flex
+        onClick={() => setSearchFilters(!searchFilters)}
+        cursor='pointer'
+        bg='gray.100'
+        borderBottom='1px'
+        borderColor='gray.200'
+        p='2'
+        fontWeight='black'
+        fontSize='lg'
+        justifyContent='center'
+        alignItems='center'
+      >
+        <Text>Search Property By Filters</Text>
+        <Icon paddingLeft='2' w='7' as={BsFilter} />
       </Flex>
-    </Flex>
+      {searchFilters && <SearchFilters />}
+      <Text fontSize='2xl' p='4' fontWeight='bold'>
+        Properties {router.query.purpose}
+      </Text>
+      <Flex flexWrap='wrap'>
+        {properties.map((property) => <Property property={property} key={property.id} />)}
+      </Flex>
+      {properties.length === 0 && (
+        <Flex justifyContent='center' alignItems='center' flexDir='column' marginTop='5' marginBottom='5'>
+          <Image src={noresult} alt="no result" />
+          <Text fontSize='xl' marginTop='3'>No Result Found.</Text>
+        </Flex>
+      )}
+    </Box>
   );
+};
+
+export async function getServerSideProps({ query }) {
+  const purpose = query.purpose || 'for-rent';
+  const rentFrequency = query.rentFrequency || 'yearly';
+  const minPrice = query.minPrice || '0';
+  const maxPrice = query.maxPrice || '1000000';
+  const roomsMin = query.roomsMin || '0';
+  const bathsMin = query.bathsMin || '0';
+  const sort = query.sort || 'price-desc';
+  const areaMax = query.areaMax || '35000';
+  const locationExternalIDs = query.locationExternalIDs || '5002';
+  const categoryExternalID = query.categoryExternalID || '4';
+
+  const data = await fetchApi(`${baseUrl}/properties/list?locationExternalIDs=${locationExternalIDs}&purpose=${purpose}&categoryExternalID=${categoryExternalID}&bathsMin=${bathsMin}&rentFrequency=${rentFrequency}&priceMin=${minPrice}&priceMax=${maxPrice}&roomsMin=${roomsMin}&sort=${sort}&areaMax=${areaMax}`);
+
+  return {
+    props: {
+      properties: data?.hits,
+    },
+  };
 }
+
+export default Search;
