@@ -33,7 +33,7 @@ git clone https://github.com/GonzaloVolonterio/real-estate-nextjs-app
 ### Install🔧
 
 ```
-yarn install
+npm install
 ```
 
 
