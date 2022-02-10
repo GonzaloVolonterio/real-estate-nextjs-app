@@ -113,3 +113,4 @@ export default function SearchFilters() {
       </Flex>
     </Flex>
   );
+}
