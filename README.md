@@ -34,7 +34,11 @@ git clone https://github.com/GonzaloVolonterio/real-estate-nextjs-app
 
 ```
 npm install
+
+npm start
 ```
+
+![1](https://user-images.githubusercontent.com/64506662/234716466-baefce6f-b0ea-4e7f-bb49-228522bd4787.png)
 
 
 
