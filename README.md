@@ -8,7 +8,8 @@
 
 ```
 Nextjs
-React 
+React
+Javascript
 Chakra ui
 Nprogress
 Framer Motion
